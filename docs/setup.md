@@ -124,6 +124,34 @@ Say your wake word, then speak your message. The agent will respond through your
 
 ---
 
+## Performance Tuning
+
+### Silence timeout trade-off (`RECORDING_SILENCE_TIMEOUT_SECONDS`)
+
+This setting controls how quickly recording stops after you stop speaking:
+
+- Lower values (e.g. `0.8`–`1.0`) → faster response, lower latency
+- Higher values (e.g. `1.5`–`2.5`) → better at catching long pauses in speech
+
+Recommended starting point for responsiveness: `1.0`.
+
+### STT backend comparison (cost vs latency)
+
+| Backend | Cost | Typical latency | Notes |
+|---|---|---|---|
+| `local` (faster-whisper) | Free | Low (after model warmup) | Best default for local/offline use |
+| `api` (OpenAI Whisper) | Paid per usage | Medium (network + API) | Useful when local CPU/GPU is limited |
+
+Tip: if your machine is modest, use `WHISPER_LOCAL_MODEL=tiny` or `base` for faster turn-around.
+
+### TTS streaming playback
+
+The client uses streaming TTS playback for faster perceived response:
+
+- Audio starts playing as soon as enough streamed MP3 data is decoded
+- Playback no longer waits for the entire response to synthesize first
+- If streaming is unavailable, it automatically falls back to buffered playback
+
 ## Troubleshooting
 
 **`EnvironmentError: Required environment variable ... is not set`**  

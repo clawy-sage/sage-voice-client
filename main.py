@@ -68,8 +68,7 @@ def main() -> None:
                 logger.info("Empty agent reply.")
                 return
 
-            audio_bytes = tts_service.synthesize(reply)
-            audio_service.play(audio_bytes)
+            tts_service.synthesize_and_play(reply, audio_service)
 
         except Exception as exc:
             logger.exception("Pipeline error: %s", exc)

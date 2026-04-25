@@ -56,7 +56,7 @@ class STTConfig:
 
     @classmethod
     def from_env(cls) -> "STTConfig":
-        backend = _optional("STT_BACKEND", "api").lower()
+        backend = _optional("STT_BACKEND", "local").lower()
         api_key = _require("OPENAI_API_KEY") if backend == "api" else _optional("OPENAI_API_KEY")
 
         return cls(
@@ -66,7 +66,7 @@ class STTConfig:
             local_model=_optional("WHISPER_LOCAL_MODEL", "base"),
             local_device=_optional("WHISPER_LOCAL_DEVICE", "cpu"),
             local_compute_type=_optional("WHISPER_LOCAL_COMPUTE_TYPE", "int8"),
-            silence_timeout=float(_optional("RECORDING_SILENCE_TIMEOUT_SECONDS", "2.0")),
+            silence_timeout=float(_optional("RECORDING_SILENCE_TIMEOUT_SECONDS", "1.0")),
             max_seconds=float(_optional("RECORDING_MAX_SECONDS", "30")),
         )
 
