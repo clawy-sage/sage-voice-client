@@ -45,16 +45,27 @@ class PorcupineConfig:
 
 @dataclass(frozen=True)
 class STTConfig:
+    backend: str
     api_key: str
     model: str
+    local_model: str
+    local_device: str
+    local_compute_type: str
     silence_timeout: float
     max_seconds: float
 
     @classmethod
     def from_env(cls) -> "STTConfig":
+        backend = _optional("STT_BACKEND", "api").lower()
+        api_key = _require("OPENAI_API_KEY") if backend == "api" else _optional("OPENAI_API_KEY")
+
         return cls(
-            api_key=_require("OPENAI_API_KEY"),
+            backend=backend,
+            api_key=api_key,
             model=_optional("WHISPER_MODEL", "whisper-1"),
+            local_model=_optional("WHISPER_LOCAL_MODEL", "base"),
+            local_device=_optional("WHISPER_LOCAL_DEVICE", "cpu"),
+            local_compute_type=_optional("WHISPER_LOCAL_COMPUTE_TYPE", "int8"),
             silence_timeout=float(_optional("RECORDING_SILENCE_TIMEOUT_SECONDS", "2.0")),
             max_seconds=float(_optional("RECORDING_MAX_SECONDS", "30")),
         )

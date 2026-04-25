@@ -5,7 +5,7 @@ Orchestrates all services in a simple wake-word → STT → agent → TTS loop.
 
 Flow:
     1. WakeWordService listens for the configured wake word
-    2. On detection: STTService records and transcribes the utterance
+    2. On detection: STT service records and transcribes the utterance
     3. OpenClawService sends the transcript to the agent
     4. TTSService converts the reply to speech
     5. AudioService plays the response
@@ -20,7 +20,7 @@ import threading
 
 from config import Config
 from services.wakeword import WakeWordService
-from services.stt import STTService
+from services.stt import create_stt_service
 from services.openclaw_api import OpenClawService
 from services.tts import TTSService
 from services.audio import AudioService
@@ -42,7 +42,7 @@ def main() -> None:
         logger.error("Configuration error: %s", e)
         sys.exit(1)
 
-    stt_service = STTService(cfg.stt, cfg.audio)
+    stt_service = create_stt_service(cfg.stt, cfg.audio)
     openclaw_service = OpenClawService(cfg.openclaw)
     tts_service = TTSService(cfg.tts)
     audio_service = AudioService(cfg.audio)

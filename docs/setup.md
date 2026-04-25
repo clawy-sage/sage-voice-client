@@ -6,9 +6,9 @@
 - A working microphone
 - The following accounts/keys:
   - [Picovoice Console](https://console.picovoice.ai/) — free Porcupine access key
-  - [OpenAI](https://platform.openai.com/) — for Whisper STT
   - [OpenClaw](https://openclaw.ai/) — running locally or remotely
   - [ElevenLabs](https://elevenlabs.io/) — for TTS
+  - [OpenAI](https://platform.openai.com/) — only if you use Whisper API backend (`STT_BACKEND=api`)
 
 ---
 
@@ -28,14 +28,52 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-Open `.env` and fill in all required values. Required fields:
+Open `.env` and fill in required values.
+
+Always required:
 
 | Variable | Description |
 |---|---|
 | `PORCUPINE_ACCESS_KEY` | From Picovoice Console |
-| `OPENAI_API_KEY` | For Whisper transcription |
 | `OPENCLAW_API_TOKEN` | Your OpenClaw gateway token |
 | `ELEVENLABS_API_KEY` | For TTS synthesis |
+
+Conditionally required:
+
+| Variable | When required |
+|---|---|
+| `OPENAI_API_KEY` | Only when `STT_BACKEND=api` |
+
+---
+
+## Local Whisper (offline, free)
+
+Set this in `.env`:
+
+```bash
+STT_BACKEND=local
+```
+
+Why use `faster-whisper` locally:
+
+- No API cost
+- Fully offline transcription
+- Typically faster than `openai-whisper` on the same machine
+
+Model size trade-offs:
+
+| Model | Approx. size | Speed | Accuracy |
+|---|---:|---|---|
+| `tiny` | ~75 MB | Fastest | Lowest |
+| `base` | ~150 MB | Very fast | Good |
+| `small` | ~500 MB | Fast | Better |
+| `medium` | ~1.5 GB | Moderate | High |
+| `large-v3` | ~3 GB | Slowest | Highest |
+
+Notes:
+
+- First run downloads the selected model and caches it at `~/.cache/huggingface/hub/`.
+- `OPENAI_API_KEY` is not needed when `STT_BACKEND=local`.
 
 ---
 
