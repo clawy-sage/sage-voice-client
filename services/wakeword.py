@@ -99,18 +99,24 @@ class OpenWakeWordService:
                 "openwakeword is not installed. Install dependencies from requirements.txt."
             )
 
-        import openwakeword
+        import openwakeword as _oww
 
         if self._wakeword_cfg.oww_model_path:
-            # Custom model: explicit path to .onnx file (Windows) or .tflite (Linux)
+            # Custom model: explicit path to .onnx file
             logger.info("Using custom OpenWakeWord model: %s", self._wakeword_cfg.oww_model_path)
-            return Model(wakeword_models=[self._wakeword_cfg.oww_model_path])
+            return Model(wakeword_model_paths=[self._wakeword_cfg.oww_model_path])
 
-        # Built-in model: download pre-trained models first, then load by name
-        logger.info("Downloading/verifying built-in OpenWakeWord models…")
-        openwakeword.utils.download_models()
-        logger.info("Loading OpenWakeWord model: %s", self._wakeword_cfg.oww_model)
-        return Model(wakeword_models=[self._wakeword_cfg.oww_model])
+        # Built-in model: resolve name to bundled file path, then load
+        model_name = self._wakeword_cfg.oww_model
+        entry = _oww.models.get(model_name)
+        if entry is None:
+            available = list(_oww.models.keys())
+            raise ValueError(
+                f"Unknown built-in OpenWakeWord model '{model_name}'. "
+                f"Available: {available}"
+            )
+        logger.info("Loading OpenWakeWord model: %s", model_name)
+        return Model(wakeword_model_paths=[entry["model_path"]])
 
     def listen(self, on_detected: Callable[[], None], stop_event=None) -> None:
         """Block and listen for the wake word using OpenWakeWord."""

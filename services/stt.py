@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import io
 import logging
+import os
 import tempfile
 from typing import Protocol
 
@@ -145,11 +146,15 @@ class WhisperLocalService:
             logger.warning("No audio captured.")
             return ""
 
-        with tempfile.NamedTemporaryFile(suffix=".wav") as tmp:
-            sf.write(tmp.name, audio_data, self._audio_cfg.sample_rate, format="WAV", subtype="PCM_16")
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
+            tmp_path = tmp.name
+        try:
+            sf.write(tmp_path, audio_data, self._audio_cfg.sample_rate, format="WAV", subtype="PCM_16")
             logger.info("Transcribing with local Whisper model…")
-            segments, _ = self._model.transcribe(tmp.name)
+            segments, _ = self._model.transcribe(tmp_path)
             text = "".join(segment.text for segment in segments).strip()
+        finally:
+            os.unlink(tmp_path)
 
         logger.info("Transcript: %s", text)
         return text
