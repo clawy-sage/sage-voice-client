@@ -104,7 +104,7 @@ class OpenWakeWordService:
             return Model(wakeword_models=[self._wakeword_cfg.oww_model_path])
 
         logger.info("Using built-in OpenWakeWord model: %s", self._wakeword_cfg.oww_model)
-        return Model(inference_framework="tflite", wakeword_models=[self._wakeword_cfg.oww_model])
+        return Model(wakeword_models=[self._wakeword_cfg.oww_model])
 
     def listen(self, on_detected: Callable[[], None], stop_event=None) -> None:
         """Block and listen for the wake word using OpenWakeWord."""
