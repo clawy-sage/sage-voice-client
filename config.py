@@ -8,7 +8,8 @@ Raises clear errors on startup if required values are missing.
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -29,17 +30,47 @@ def _optional(key: str, default: str = "") -> str:
 
 
 @dataclass(frozen=True)
-class PorcupineConfig:
-    access_key: str
+class WakeWordConfig:
+    backend: str
+
+    # Porcupine fields
+    porcupine_access_key: str | None
     keyword: str
-    keyword_path: str | None  # Path to custom .ppn file (overrides keyword)
+    keyword_path: str | None
+
+    # OpenWakeWord fields
+    oww_model: str
+    oww_model_path: str | None
+    oww_threshold: float
 
     @classmethod
-    def from_env(cls) -> "PorcupineConfig":
+    def from_env(cls) -> "WakeWordConfig":
+        explicit_backend = _optional("WAKEWORD_BACKEND").strip().lower()
+        porcupine_key = _optional("PORCUPINE_ACCESS_KEY") or None
+
+        if explicit_backend:
+            backend = explicit_backend
+        else:
+            backend = "porcupine" if porcupine_key else "openwakeword"
+
+        if backend not in {"porcupine", "openwakeword"}:
+            raise EnvironmentError(
+                "WAKEWORD_BACKEND must be either 'porcupine' or 'openwakeword'."
+            )
+
+        if backend == "porcupine" and not porcupine_key:
+            raise EnvironmentError(
+                "PORCUPINE_ACCESS_KEY is required when WAKEWORD_BACKEND=porcupine."
+            )
+
         return cls(
-            access_key=_require("PORCUPINE_ACCESS_KEY"),
+            backend=backend,
+            porcupine_access_key=porcupine_key,
             keyword=_optional("PORCUPINE_KEYWORD", "jarvis"),
             keyword_path=_optional("PORCUPINE_KEYWORD_PATH") or None,
+            oww_model=_optional("OWW_MODEL", "hey_jarvis"),
+            oww_model_path=_optional("OWW_MODEL_PATH") or None,
+            oww_threshold=float(_optional("OWW_THRESHOLD", "0.5")),
         )
 
 
@@ -120,7 +151,7 @@ class AudioConfig:
 
 @dataclass(frozen=True)
 class Config:
-    porcupine: PorcupineConfig
+    wakeword: WakeWordConfig
     stt: STTConfig
     openclaw: OpenClawConfig
     tts: TTSConfig
@@ -129,7 +160,7 @@ class Config:
     @classmethod
     def load(cls) -> "Config":
         return cls(
-            porcupine=PorcupineConfig.from_env(),
+            wakeword=WakeWordConfig.from_env(),
             stt=STTConfig.from_env(),
             openclaw=OpenClawConfig.from_env(),
             tts=TTSConfig.from_env(),

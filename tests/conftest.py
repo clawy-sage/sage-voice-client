@@ -1,14 +1,31 @@
 import pytest
 
-from config import AudioConfig, OpenClawConfig, PorcupineConfig, STTConfig, TTSConfig
+from config import AudioConfig, OpenClawConfig, STTConfig, TTSConfig, WakeWordConfig
 
 
 @pytest.fixture
-def porcupine_config() -> PorcupineConfig:
-    return PorcupineConfig(
-        access_key="pc-access-key",
+def wakeword_porcupine_config() -> WakeWordConfig:
+    return WakeWordConfig(
+        backend="porcupine",
+        porcupine_access_key="pc-access-key",
         keyword="jarvis",
         keyword_path=None,
+        oww_model="hey_jarvis",
+        oww_model_path=None,
+        oww_threshold=0.5,
+    )
+
+
+@pytest.fixture
+def wakeword_openwakeword_config() -> WakeWordConfig:
+    return WakeWordConfig(
+        backend="openwakeword",
+        porcupine_access_key=None,
+        keyword="jarvis",
+        keyword_path=None,
+        oww_model="hey_jarvis",
+        oww_model_path=None,
+        oww_threshold=0.5,
     )
 
 
@@ -69,9 +86,13 @@ def audio_config() -> AudioConfig:
 
 @pytest.fixture
 def required_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("WAKEWORD_BACKEND", raising=False)
     monkeypatch.setenv("PORCUPINE_ACCESS_KEY", "pc-access-key")
     monkeypatch.setenv("PORCUPINE_KEYWORD", "jarvis")
     monkeypatch.delenv("PORCUPINE_KEYWORD_PATH", raising=False)
+    monkeypatch.setenv("OWW_MODEL", "hey_jarvis")
+    monkeypatch.delenv("OWW_MODEL_PATH", raising=False)
+    monkeypatch.setenv("OWW_THRESHOLD", "0.5")
 
     monkeypatch.setenv("STT_BACKEND", "local")
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)

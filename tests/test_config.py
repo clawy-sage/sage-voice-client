@@ -1,6 +1,6 @@
 import pytest
 
-from config import AudioConfig, Config, STTConfig
+from config import AudioConfig, Config, STTConfig, WakeWordConfig
 
 
 def test_config_load_succeeds_with_required_env(required_env) -> None:
@@ -39,3 +39,29 @@ def test_audio_config_parses_device_indices(monkeypatch: pytest.MonkeyPatch) -> 
     cfg = AudioConfig.from_env()
 
     assert (cfg.input_device, cfg.output_device) == (4, None)
+
+
+def test_wakeword_defaults_to_porcupine_when_legacy_key_is_set(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("WAKEWORD_BACKEND", raising=False)
+    monkeypatch.setenv("PORCUPINE_ACCESS_KEY", "pc-key")
+
+    cfg = WakeWordConfig.from_env()
+
+    assert cfg.backend == "porcupine"
+
+
+def test_wakeword_defaults_to_openwakeword_without_backend_or_key(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("WAKEWORD_BACKEND", raising=False)
+    monkeypatch.delenv("PORCUPINE_ACCESS_KEY", raising=False)
+
+    cfg = WakeWordConfig.from_env()
+
+    assert cfg.backend == "openwakeword"
+
+
+def test_wakeword_requires_porcupine_key_when_backend_is_porcupine(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("WAKEWORD_BACKEND", "porcupine")
+    monkeypatch.delenv("PORCUPINE_ACCESS_KEY", raising=False)
+
+    with pytest.raises(EnvironmentError):
+        WakeWordConfig.from_env()
