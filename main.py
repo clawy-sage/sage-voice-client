@@ -19,7 +19,7 @@ import sys
 import threading
 
 from config import Config
-from services.wakeword import WakeWordService
+from services.wakeword import create_wakeword_service
 from services.stt import create_stt_service
 from services.openclaw_api import OpenClawService
 from services.tts import TTSService
@@ -46,7 +46,7 @@ def main() -> None:
     openclaw_service = OpenClawService(cfg.openclaw)
     tts_service = TTSService(cfg.tts)
     audio_service = AudioService(cfg.audio)
-    wake_service = WakeWordService(cfg.porcupine, cfg.audio)
+    wake_service = create_wakeword_service(cfg.wakeword, cfg.audio)
 
     # Mutex to prevent concurrent pipeline runs
     # (if wake word fires again while still processing)

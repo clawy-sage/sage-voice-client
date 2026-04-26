@@ -5,9 +5,9 @@
 - Python 3.10 or newer
 - A working microphone
 - The following accounts/keys:
-  - [Picovoice Console](https://console.picovoice.ai/) — free Porcupine access key
   - [OpenClaw](https://openclaw.ai/) — running locally or remotely
   - [ElevenLabs](https://elevenlabs.io/) — for TTS
+  - [Picovoice Console](https://console.picovoice.ai/) — only if you choose Porcupine wake word backend
   - [OpenAI](https://platform.openai.com/) — only if you use Whisper API backend (`STT_BACKEND=api`)
 
 ---
@@ -34,7 +34,6 @@ Always required:
 
 | Variable | Description |
 |---|---|
-| `PORCUPINE_ACCESS_KEY` | From Picovoice Console |
 | `OPENCLAW_API_TOKEN` | Your OpenClaw gateway token |
 | `ELEVENLABS_API_KEY` | For TTS synthesis |
 
@@ -77,21 +76,44 @@ Notes:
 
 ---
 
-## Step 3: Choose a wake word
+## Step 3: Choose a wake word backend
 
-**Built-in keywords** (no extra files needed):
+The client supports two wake word backends:
 
-- `jarvis`, `hey siri`, `alexa`, `computer`, `porcupine`, `bumblebee`, `picovoice`, `hey barista`, `americano`, `blueberry`, `grapefruit`, `grasshopper`, `hey google`, `ok google`, `terminator`
+| Backend | Cost | Offline | Accuracy | Notes |
+|---|---|---|---|---|
+| `openwakeword` | Free | Yes | Good | Default backend. No API key required. |
+| `porcupine` | Free tier available | Yes | Excellent | Requires a free access key from [picovoice.ai](https://picovoice.ai). |
+
+### OpenWakeWord (default)
 
 Set in `.env`:
+
+```bash
+WAKEWORD_BACKEND=openwakeword
+OWW_MODEL=hey_jarvis
+OWW_THRESHOLD=0.5
 ```
+
+- `OWW_MODEL=hey_jarvis` uses the built-in model.
+- Optionally set `OWW_MODEL_PATH` to a custom `.tflite` model file.
+
+### Porcupine
+
+Set in `.env`:
+
+```bash
+WAKEWORD_BACKEND=porcupine
+PORCUPINE_ACCESS_KEY=your_key_here
 PORCUPINE_KEYWORD=jarvis
 ```
 
-**Custom wake word** (e.g. "Hey Sage"):  
-Train one for free at [Picovoice Console](https://console.picovoice.ai/) → Wake Word → Custom.  
-Download the `.ppn` file and set:
-```
+Porcupine built-in keywords include: `jarvis`, `hey siri`, `alexa`, `computer`, `porcupine`, and more.
+
+For a custom Porcupine wake word (e.g. "Hey Sage"), train one at
+[Picovoice Console](https://console.picovoice.ai/) and set:
+
+```bash
 PORCUPINE_KEYWORD_PATH=/path/to/Hey-Sage_en_linux_v3_0_0.ppn
 ```
 
@@ -117,7 +139,7 @@ python main.py
 
 You should see:
 ```
-00:00:01 [INFO] services.wakeword: Wake word service ready — listening for 'jarvis'
+00:00:01 [INFO] services.wakeword: Wake word service ready — listening for 'hey_jarvis' (threshold=0.50)
 ```
 
 Say your wake word, then speak your message. The agent will respond through your speakers.
