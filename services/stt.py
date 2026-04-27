@@ -25,7 +25,8 @@ from config import AudioConfig, STTConfig
 logger = logging.getLogger(__name__)
 
 # RMS threshold below which audio is considered silence
-_SILENCE_RMS_THRESHOLD = 300
+# Override via RECORDING_SILENCE_THRESHOLD env variable
+_SILENCE_RMS_THRESHOLD = float(os.environ.get("RECORDING_SILENCE_THRESHOLD", "300"))
 
 
 class _AudioRecorder:
@@ -65,11 +66,13 @@ class _AudioRecorder:
                 if rms > _SILENCE_RMS_THRESHOLD:
                     recording_started = True
                     silent_duration = 0.0
-                elif recording_started:
-                    silent_duration += chunk_size / sample_rate
-                    if silent_duration >= silence_timeout:
-                        logger.debug("Silence detected — stopping recording.")
-                        break
+                else:
+                    logger.debug("RMS: %.1f (threshold: %.1f)", rms, _SILENCE_RMS_THRESHOLD)
+                    if recording_started:
+                        silent_duration += chunk_size / sample_rate
+                        if silent_duration >= silence_timeout:
+                            logger.debug("Silence detected — stopping recording.")
+                            break
 
         if not recording_started:
             return None
